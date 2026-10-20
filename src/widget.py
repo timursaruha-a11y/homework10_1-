@@ -1,5 +1,5 @@
 from src.masks import get_mask_account as account
-from src.masks import get_mask_card_number as card
+from src.masks import get_mask_card_number as ca
 
 
 def mask_account_card(data_of_card: str) -> str:
