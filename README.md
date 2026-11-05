@@ -34,5 +34,12 @@
 
 # \- `sort\_by\_date(data, reverse)`: Сортирует транзакции по дате.
 
+### Модуль generators
+Предоставляет инструменты для эффективной обработки больших массивов данных:
+- `filter_by_currency(transactions, currency)`: Итератор, фильтрующий транзакции по коду валюты (USD, RUB и т.д.).
+- `transaction_descriptions(transactions)`: Итератор, возвращающий текстовое описание для каждой транзакции.
+- `card_number_generator(start, end)`: Генератор номеров карт в формате `XXXX XXXX XXXX XXXX` для заданного диапазона чисел.
+
+
 
 
