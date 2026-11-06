@@ -1,46 +1,30 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+import pytest
 import requests
-from src.external_api import get_exchange_amount
+from src.external_api import convert_to_rub
 
 
-# Тест с моком для API-запроса
-@patch('requests.request')
-@patch('os.getenv')
-def test_get_exchange_amount_success(mock_getenv, mock_request):
-    # Мокаем os.getenv для получения API_KEY из переменных окружения
-    mock_getenv.return_value = 'test_api_key'
+@patch('src.external_api.requests.get')
+def test_convert_to_rub_usd_success(mock_get):
+    """Тест успешной конвертации USD в RUB."""
+    transaction = {'operationAmount': {'amount': '100.00', 'currency': {'code': 'USD'}}}
 
-    # Мокаем ответ от requests.request
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"result": 74.0}  # Мокаем результат API-конвертации
-    mock_request.return_value = mock_response
+    # Настраиваем мок для requests.get
+    mock_response = mock_get.return_value
+    mock_response.status_code = 200
+    mock_response.json.return_value = {'result': 7400.0}  # Имитируем ответ от API
 
-    # Вызываем функцию с тестовыми значениями
-    result = get_exchange_amount('USD', '100')
-
-    # Проверяем, что возвращаемое значение правильное
-    assert result == 74.0
-
-    # Проверяем, что запрос был сделан с правильными параметрами
-    mock_request.assert_called_once_with(
-        "GET",
-        "https://api.apilayer.com/exchangerates_data/convert",
-        headers={"apikey": 'test_api_key'},
-        params={"amount": '100', "from": 'USD', "to": 'RUB'}
-    )
+    # Проверяем, что функция возвращает корректную сумму
+    assert convert_to_rub(transaction) == 7400.0
 
 
-# Тест на случай, если API возвращает ошибку
-@patch('requests.request')
-@patch('os.getenv')
-def test_get_exchange_amount_api_error(mock_getenv, mock_request):
-    mock_getenv.return_value = 'test_api_key'
+@patch('src.external_api.requests.get')
+def test_convert_to_rub_api_error(mock_get):
+    """Тест обработки ошибки API при конвертации."""
+    transaction = {'operationAmount': {'amount': '100.00', 'currency': {'code': 'EUR'}}}
 
-    # Мокаем случай, когда API возвращает ошибку
-    mock_response = MagicMock()
-    mock_response.json.return_value = {}  # Пустой ответ, нет ключа "result"
-    mock_request.return_value = mock_response
+    # Имитируем исключение при запросе
+    mock_get.side_effect = requests.RequestException('Ошибка соединения')
 
-    # Проверяем, что функция возвращает None или генерирует исключение
-    result = get_exchange_amount('USD', '100')
-    assert result is None  # Так как нет ключа "result" в ответе
+    # Функция должна безопасно вернуть 0.0
+    assert convert_to_rub(transaction) == 0.0

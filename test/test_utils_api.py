@@ -1,9 +1,12 @@
 ﻿import json
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock
 import pytest
 import requests
-from src.utils import zip_transactions_from_json
+import pandas as pd
+from src.utils import zip_transactions_from_json, read_transactions_csv, read_transactions_excel
 from src.external_api import convert_to_rub
+
+# --- Твои существующие тесты для JSON и API ---
 
 @patch('pathlib.Path.exists', return_value=True)
 def test_zip_transactions_success(mock_exists):
@@ -42,3 +45,56 @@ def test_convert_to_rub_api_error(mock_get):
     transaction = {'operationAmount': {'amount': '100.00', 'currency': {'code': 'EUR'}}}
     mock_get.side_effect = requests.RequestException('Ошибка')
     assert convert_to_rub(transaction) == 0.0
+
+
+# --- Новые тесты для функций чтения CSV и Excel ---
+
+@patch('pathlib.Path.exists', return_value=True)
+@patch('pandas.read_csv')
+def test_read_transactions_csv_success(mock_read_csv, mock_exists):
+    """Тест успешного чтения CSV файла через мок pandas."""
+    # Создаем фейковый DataFrame, который вернет pandas
+    mock_df = MagicMock()
+    mock_df.fillna.return_value.to_dict.return_value = [{'id': 1, 'state': 'EXECUTED'}]
+    mock_read_csv.return_value = mock_df
+
+    assert read_transactions_csv('dummy.csv') == [{'id': 1, 'state': 'EXECUTED'}]
+
+
+def test_read_transactions_csv_file_not_found():
+    """Тест возврата пустого списка, если CSV файл не существует."""
+    with patch('pathlib.Path.exists', return_value=False):
+        assert read_transactions_csv('missing.csv') == []
+
+
+@patch('pathlib.Path.exists', return_value=True)
+@patch('pandas.read_csv')
+def test_read_transactions_csv_error(mock_read_csv, mock_exists):
+    """Тест возврата пустого списка при ошибке парсинга CSV."""
+    mock_read_csv.side_effect = Exception("Ошибка чтения")
+    assert read_transactions_csv('corrupt.csv') == []
+
+
+@patch('pathlib.Path.exists', return_value=True)
+@patch('pandas.read_excel')
+def test_read_transactions_excel_success(mock_read_excel, mock_exists):
+    """Тест успешного чтения Excel файла через мок pandas."""
+    mock_df = MagicMock()
+    mock_df.fillna.return_value.to_dict.return_value = [{'id': 2, 'state': 'CANCELED'}]
+    mock_read_excel.return_value = mock_df
+
+    assert read_transactions_excel('dummy.xlsx') == [{'id': 2, 'state': 'CANCELED'}]
+
+
+def test_read_transactions_excel_file_not_found():
+    """Тест возврата пустого списка, если Excel файл не существует."""
+    with patch('pathlib.Path.exists', return_value=False):
+        assert read_transactions_excel('missing.xlsx') == []
+
+
+@patch('pathlib.Path.exists', return_value=True)
+@patch('pandas.read_excel')
+def test_read_transactions_excel_error(mock_read_excel, mock_exists):
+    """Тест возврата пустого списка при ошибке парсинга Excel."""
+    mock_read_excel.side_effect = Exception("Ошибка чтения")
+    assert read_transactions_excel('corrupt.xlsx') == []
