@@ -2,6 +2,7 @@
 import logging
 import os
 from pathlib import Path
+
 import pandas as pd
 
 # Получаем путь к корню проекта и создаем папку logs
@@ -36,7 +37,9 @@ def zip_transactions_from_json(file_path: str | Path) -> list[dict]:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, list):
-                logger.info(f"Данные успешно прочитаны. Найдено транзакций: {len(data)}")
+                logger.info(
+                    f"Данные успешно прочитаны. Найдено транзакций: {len(data)}"
+                )
                 return data
             logger.error("Структура JSON некорректна: файл содержит не список (list)")
             return []
@@ -59,9 +62,9 @@ def read_transactions_csv(file_path: str | Path) -> list[dict]:
 
     try:
         # Использование sep=None и engine='python' позволяет pandas автоматически определить разделитель (, или ;)
-        df = pd.read_csv(path, sep=None, engine='python')
+        df = pd.read_csv(path, sep=None, engine="python")
         # Метод fillna('') заменяет пустые ячейки (NaN) на пустые строки, чтобы избежать проблем при фильтрации
-        df = df.fillna('')
+        df = df.fillna("")
 
         data = df.to_dict(orient="records")
         logger.info(f"Данные из CSV успешно прочитаны. Найдено транзакций: {len(data)}")
@@ -83,10 +86,12 @@ def read_transactions_excel(file_path: str | Path) -> list[dict]:
     try:
         df = pd.read_excel(path)
         # Также заменяем NaN на пустые строки для консистентности данных
-        df = df.fillna('')
+        df = df.fillna("")
 
         data = df.to_dict(orient="records")
-        logger.info(f"Данные из Excel успешно прочитаны. Найдено транзакций: {len(data)}")
+        logger.info(
+            f"Данные из Excel успешно прочитаны. Найдено транзакций: {len(data)}"
+        )
         return data
     except Exception as e:
         logger.error(f"Ошибка при чтении Excel файла {path}: {e}")

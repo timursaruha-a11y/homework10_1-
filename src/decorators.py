@@ -29,9 +29,7 @@ def log(filename: Optional[str] = None) -> Callable:
 
             except Exception as e:
                 # Формируем сообщение об ошибке с именем, типом ошибки и параметрами
-                error_message = (
-                    f"{func.__name__} error: {type(e).__name__}. Inputs: {args}, {kwargs}\n"
-                )
+                error_message = f"{func.__name__} error: {type(e).__name__}. Inputs: {args}, {kwargs}\n"
 
                 # Записываем лог ошибки
                 if filename:

@@ -1,5 +1,6 @@
-import os
+
 import pytest
+
 from src.decorators import log
 
 
@@ -33,7 +34,9 @@ def test_log_console_error(capsys):
 
     # Перехватываем вывод в консоль
     captured = capsys.readouterr()
-    assert "divide_numbers error: ZeroDivisionError. Inputs: (10, 0), {}" in captured.out
+    assert (
+        "divide_numbers error: ZeroDivisionError. Inputs: (10, 0), {}" in captured.out
+    )
 
 
 def test_log_file_success(tmp_path):
